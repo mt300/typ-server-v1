@@ -1,0 +1,86 @@
+### Get all profiles
+GET http://localhost:9000/profiles
+Content-Type: application/json
+
+### Get profile by ID
+GET http://localhost:9000/profiles/001
+Content-Type: application/json
+
+### Create new profile
+POST http://localhost:9000/profiles
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@example.com","age": 18,
+    "location": {
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    },
+    "interests": ["hiking", "reading"],
+    "bio": "A short bio about me"
+}
+
+### Update profile
+PUT http://localhost:9000/profiles/1
+Content-Type: application/json
+
+{
+    "name": "John Doe Updated",
+    "email": "john.updated@example.com",
+    "location": {
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    },
+    "interests": ["hiking", "reading", "coding"],
+    "bio": "An updated bio about me"
+}
+
+### Delete profile
+DELETE http://localhost:9000/profiles/1
+Content-Type: application/json
+
+### Search profiles by location
+GET http://localhost:9000/profiles/search?lat=40.7128&lng=-74.0060&radius=10
+Content-Type: application/json
+
+### Search profiles by interests
+GET http://localhost:9000/profiles/search?interests=hiking,reading
+Content-Type: application/json
+
+### Get nearby profiles
+GET http://localhost:9000/profiles/nearby?lat=40.7128&lng=-74.0060&radius=10
+Content-Type: application/json
+
+### Update profile location
+PUT http://localhost:9000/profiles/1/location
+Content-Type: application/json
+
+{
+    "latitude": 40.7128,
+    "longitude": -74.0060
+}
+
+### Update profile interests
+PUT http://localhost:9000/profiles/1/interests
+Content-Type: application/json
+
+{
+    "interests": ["hiking", "reading", "coding"]
+}
+
+### Update profile bio
+PUT http://localhost:9000/profiles/1/bio
+Content-Type: application/json
+
+{
+    "bio": "An updated bio about me"
+}
+
+### Get profile matches
+GET http://localhost:9000/profiles/1/matches
+Content-Type: application/json
+
+### Get profile recommendations
+GET http://localhost:9000/profiles/1/recommendations
+Content-Type: application/json 
