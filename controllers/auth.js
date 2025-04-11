@@ -18,6 +18,10 @@ router.post('/register', async (req, res) => {
         const { email, password, name } = req.body;
 
         // Validate input
+        if (!email || !password || !name) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
         if (!validateEmail(email)) {
             return res.status(400).json({ error: 'Invalid email format' });
         }
@@ -70,6 +74,10 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Missing email or password' });
+        }
+
         // Find user
         const user = await User.findOne({ email });
         if (!user) {
@@ -115,6 +123,11 @@ router.get('/me', authenticateToken, async (req, res) => {
         console.error('Get user error:', error);
         res.status(500).json({ error: 'Error fetching user' });
     }
+});
+
+// Handle GET /register
+router.get('/register', (req, res) => {
+    res.status(400).json({ error: 'Missing required fields' });
 });
 
 module.exports = router; 

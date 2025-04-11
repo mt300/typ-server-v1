@@ -1,6 +1,5 @@
-const supertest = require('supertest');
-const app = require('../index');
-const request = supertest(app);
+const request = require('supertest');
+const { app, startServer, stopServer } = require('../index');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../models/User');
@@ -9,6 +8,20 @@ const jwt = require('jsonwebtoken');
 
 // Increase timeout for all tests
 jest.setTimeout(60000);
+
+let server;
+
+beforeAll(async () => {
+    server = await startServer();
+});
+
+afterAll(async () => {
+    await stopServer(server);
+});
+
+beforeEach(async () => {
+    await Profile.deleteMany({});
+});
 
 describe('Profile Management', () => {
     let mongoServer;
@@ -62,10 +75,6 @@ describe('Profile Management', () => {
         }
     });
 
-    beforeEach(async () => {
-        await Profile.deleteMany({});
-    });
-
     describe('Profile Creation', () => {
         test('should create a profile with valid data', async () => {
             const profileData = {
@@ -88,7 +97,7 @@ describe('Profile Management', () => {
             };
 
             const response = await request
-                .post('/api/profiles')
+                .post('/profiles')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(profileData);
 
@@ -101,7 +110,7 @@ describe('Profile Management', () => {
 
         test('should reject profile with invalid age', async () => {
             const response = await request
-                .post('/api/profiles')
+                .post('/profiles')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({
                     name: 'Test User',
@@ -134,13 +143,13 @@ describe('Profile Management', () => {
 
             // Create first profile
             await request
-                .post('/api/profiles')
+                .post('/profiles')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(profileData);
 
             // Try to create second profile
             const response = await request
-                .post('/api/profiles')
+                .post('/profiles')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(profileData);
 
@@ -152,7 +161,7 @@ describe('Profile Management', () => {
     describe('Profile Photos', () => {
         test('should allow uploading profile photos', async () => {
             const response = await request
-                .post('/api/profiles/photos')
+                .post('/profiles/photos')
                 .set('Authorization', `Bearer ${authToken}`)
                 .attach('photos', Buffer.from('fake image data'), {
                     filename: 'test.jpg',
@@ -165,7 +174,7 @@ describe('Profile Management', () => {
 
         test('should reject invalid image format', async () => {
             const response = await request
-                .post('/api/profiles/photos')
+                .post('/profiles/photos')
                 .set('Authorization', `Bearer ${authToken}`)
                 .attach('photos', Buffer.from('fake image data'), {
                     filename: 'test.gif',
@@ -179,7 +188,7 @@ describe('Profile Management', () => {
         test('should reject oversized images', async () => {
             const largeBuffer = Buffer.alloc(6 * 1024 * 1024); // 6MB
             const response = await request
-                .post('/api/profiles/photos')
+                .post('/profiles/photos')
                 .set('Authorization', `Bearer ${authToken}`)
                 .attach('photos', largeBuffer, {
                     filename: 'test.jpg',
@@ -194,7 +203,7 @@ describe('Profile Management', () => {
     describe('Bio, Interests, and Preferences', () => {
         test('should allow updating bio with character limit', async () => {
             const response = await request
-                .put('/api/profiles/bio')
+                .put('/profiles/bio')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({ bio: 'A'.repeat(500) });
 

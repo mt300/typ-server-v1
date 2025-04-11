@@ -1,55 +1,67 @@
-const app = require('./index')
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const authRoutes = require('./controllers/auth');
+const profileRoutes = require('./controllers/profile');
+const messageRoutes = require('./controllers/message');
+const matchRoutes = require('./controllers/match');
+const { errorHandler } = require('./middleware/errorHandler');
 
+const app = express();
+const port = process.env.PORT || 3000;
 
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-// JSON parsing error handling
-app.use((err, req, res, next) => {
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return res.status(400).json({ error: 'Invalid JSON' })
-    }
-    next(err)
-})
+// Routes
+app.use('/auth', authRoutes);
+app.use('/profiles', profileRoutes);
+app.use('/messages', messageRoutes);
+app.use('/matches', matchRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack)
-    res.status(500).json({ error: 'Something broke!' })
-})
+// Error handling
+app.use(errorHandler);
 
-// Export a function to start the server
-const startServer = (port = 9000) => {
-    let server;
-    
+let server;
+
+const startServer = async () => {
     try {
         server = app.listen(port, () => {
             console.log(`Server running on port ${port}`);
         });
+        return server;
     } catch (err) {
-        if (err.code === 'EADDRINUSE') {
-            console.error(`Port ${port} is already in use`);
-            throw err;
-        }
+        console.error('Error starting server:', err);
         throw err;
     }
+};
 
-    // Graceful shutdown
-    const cleanup = () => {
-        if (server) {
-            server.close(() => {
-                console.log('Server closed');
-            });
+const stopServer = async (server) => {
+    try {
+        // Close all mongoose connections
+        const connections = mongoose.connections;
+        for (const connection of connections) {
+            await connection.close();
         }
-    };
+        
+        // Close the default connection
+        await mongoose.disconnect();
+        
+        await new Promise((resolve, reject) => {
+            server.close((err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+        console.log('Server stopped');
+    } catch (err) {
+        console.error('Error stopping server:', err);
+        throw err;
+    }
+};
 
-    process.on('SIGTERM', cleanup);
-    process.on('exit', cleanup);
-
-    return server;
-}
-
-// Start the server if this file is run directly
-if (require.main === module) {
-    startServer();
-}
-
-module.exports = { startServer }
+module.exports = { startServer, stopServer };

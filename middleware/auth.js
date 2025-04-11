@@ -30,17 +30,26 @@ const authenticateToken = (req, res, next) => {
 
 // Middleware to hash passwords
 const hashPassword = async (password) => {
+    if (!password) {
+        throw new Error('Password is required');
+    }
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
 };
 
 // Middleware to compare passwords
 const comparePasswords = async (password, hashedPassword) => {
+    if (!password || !hashedPassword) {
+        throw new Error('Both password and hashedPassword are required');
+    }
     return await bcrypt.compare(password, hashedPassword);
 };
 
 // Middleware to generate JWT token
 const generateToken = (user) => {
+    if (!user || !user._id || !user.email) {
+        throw new Error('Invalid user object');
+    }
     return jwt.sign(
         { id: user._id, email: user.email },
         JWT_SECRET,
@@ -50,12 +59,18 @@ const generateToken = (user) => {
 
 // Middleware to validate email
 const validateEmail = (email) => {
+    if (!email) {
+        return false;
+    }
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
 };
 
 // Middleware to validate password strength
 const validatePassword = (password) => {
+    if (!password) {
+        return false;
+    }
     return password.length >= 8;
 };
 

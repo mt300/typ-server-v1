@@ -1,13 +1,24 @@
 const request = require('supertest');
-const app = require('../index');
+const { app, startServer, stopServer } = require('../index');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../models/User');
 
-// Increase timeout for all tests
-jest.setTimeout(60000);
+let server;
+
+beforeAll(async () => {
+    server = await startServer();
+});
+
+afterAll(async () => {
+    await stopServer(server);
+});
+
+beforeEach(async () => {
+    await User.deleteMany({});
+});
 
 describe('Authentication System', () => {
     let mongoServer;
