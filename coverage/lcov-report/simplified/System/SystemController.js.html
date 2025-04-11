@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.33% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/15</span>
+                <span class='fraction'>5/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.5% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/16</span>
+                <span class='fraction'>0/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.33% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/15</span>
+                <span class='fraction'>5/15</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -95,68 +95,68 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span></td><td class="text"><pre class="prettyprint lang-js">const route = require('express').Router();
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span></td><td class="text"><pre class="prettyprint lang-js">const route = require('express').Router();
 const profiles = require('../data/profiles');
 const { getLocationRange } = require('../functions/location');
 &nbsp;
-route.get('/swipes', (req, res) =&gt; {
-    const { lat, long, locationRange, ageRange, gender } = req.query;
+route.get('/swipes', <span class="fstat-no" title="function not covered" >(r</span>eq, res) =&gt; {
+    const { lat, long, locationRange, ageRange, gender } = <span class="cstat-no" title="statement not covered" >req.query;</span>
     
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!lat || !long || !locationRange || !ageRange || !gender) {
+<span class="cstat-no" title="statement not covered" >    if (!lat || !long || !locationRange || !ageRange || !gender) {</span>
 <span class="cstat-no" title="statement not covered" >        return res.status(400).json({ error: 'Missing required parameters' });</span>
     }
 &nbsp;
-    const locationBounds = getLocationRange(parseFloat(lat), parseFloat(long), parseFloat(locationRange));
+    const locationBounds = <span class="cstat-no" title="statement not covered" >getLocationRange(parseFloat(lat), parseFloat(long), parseFloat(locationRange));</span>
     
-    const filteredProfiles = profiles.filter(profile =&gt; {
+    const filteredProfiles = <span class="cstat-no" title="statement not covered" >profiles.filter(<span class="fstat-no" title="function not covered" >pr</span>ofile =&gt; {</span>
         const isInLocationRange = 
-            profile.lat &gt;= locationBounds.latMin &amp;&amp; 
-<span class="branch-1 cbranch-no" title="branch not covered" >            profile.lat &lt;= locationBounds.latMax </span>&amp;&amp;
-<span class="branch-2 cbranch-no" title="branch not covered" >            profile.long &gt;= locationBounds.lonMin </span>&amp;&amp; 
-<span class="branch-3 cbranch-no" title="branch not covered" >            profile.long &lt;= locationBounds.lonMax;</span>
+<span class="cstat-no" title="statement not covered" >            profile.lat &gt;= locationBounds.latMin &amp;&amp; </span>
+            profile.lat &lt;= locationBounds.latMax &amp;&amp;
+            profile.long &gt;= locationBounds.lonMin &amp;&amp; 
+            profile.long &lt;= locationBounds.lonMax;
             
         const isInAgeRange = 
-            profile.age &gt;= parseInt(ageRange.split('-')[0]) &amp;&amp; 
+<span class="cstat-no" title="statement not covered" >            profile.age &gt;= parseInt(ageRange.split('-')[0]) &amp;&amp; </span>
             profile.age &lt;= parseInt(ageRange.split('-')[1]);
             
-        const matchesGender = profile.gender === gender;
+        const matchesGender = <span class="cstat-no" title="statement not covered" >profile.gender === gender;</span>
         
-        return isInLocationRange &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >isInAgeRange </span>&amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >matchesGender;</span>
+<span class="cstat-no" title="statement not covered" >        return isInLocationRange &amp;&amp; isInAgeRange &amp;&amp; matchesGender;</span>
     });
 &nbsp;
-    res.status(200).json(filteredProfiles);
+<span class="cstat-no" title="statement not covered" >    res.status(200).json(filteredProfiles);</span>
 });
 &nbsp;
 module.exports = route;</pre></td></tr></table></pre>
@@ -166,7 +166,7 @@ module.exports = route;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-11T00:01:20.412Z
+                at 2025-04-11T00:17:26.516Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

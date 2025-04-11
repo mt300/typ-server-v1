@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const {
     hashPassword,
@@ -27,13 +29,13 @@ router.post('/register', async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+            return res.status(400).json({ error: 'Email already registered' });
         }
 
         // Hash password
-        const hashedPassword = await hashPassword(password);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user
+        // Create user
         const user = new User({
             email,
             password: hashedPassword,
@@ -43,7 +45,11 @@ router.post('/register', async (req, res) => {
         await user.save();
 
         // Generate token
-        const token = generateToken(user);
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '24h' }
+        );
 
         res.status(201).json({
             token,
@@ -55,7 +61,7 @@ router.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Error creating user' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -71,13 +77,17 @@ router.post('/login', async (req, res) => {
         }
 
         // Check password
-        const validPassword = await comparePasswords(password, user.password);
+        const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         // Generate token
-        const token = generateToken(user);
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '24h' }
+        );
 
         res.json({
             token,
@@ -89,7 +99,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Error logging in' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

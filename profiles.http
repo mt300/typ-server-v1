@@ -7,19 +7,15 @@ GET http://localhost:9000/profiles/001
 Content-Type: application/json
 
 ### Create new profile
-POST http://localhost:9000/profiles
+POST http://localhost:9000/auth/register
 Content-Type: application/json
 
 {
     "name": "John Doe",
-    "email": "john@example.com","age": 18,
-    "location": {
-        "latitude": 40.7128,
-        "longitude": -74.0060
-    },
-    "interests": ["hiking", "reading"],
-    "bio": "A short bio about me"
+    "email": "john@example.com",
+    "password": "senha1234"
 }
+
 
 ### Update profile
 PUT http://localhost:9000/profiles/1
@@ -35,6 +31,7 @@ Content-Type: application/json
     "interests": ["hiking", "reading", "coding"],
     "bio": "An updated bio about me"
 }
+
 
 ### Delete profile
 DELETE http://localhost:9000/profiles/1

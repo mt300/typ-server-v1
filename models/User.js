@@ -16,11 +16,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model('User', userSchema); 
+// Index for faster queries
+userSchema.index({ email: 1 });
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User; 

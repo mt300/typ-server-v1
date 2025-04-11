@@ -1,44 +1,48 @@
 const express = require('express')
+const cors = require('cors')
 const mongoose = require('mongoose')
+const authRoutes = require('./controllers/auth')
+const profileRoutes = require('./controllers/profile')
+const messageRoutes = require('./controllers/message')
+const systemRoutes = require('./controllers/system')
+
 const app = express()
 
-// Connect to MongoDB only if not in test environment
-if (process.env.NODE_ENV !== 'test') {
-    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typing', {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
-}
-
+// Middleware
+app.use(cors())
 app.use(express.json())
 
-// const profiles = require('./data/profiles')
-const ProfileController = require('./Profiles/ProfileController')
-const SystemController = require('./System/SystemController')
-const MessagesController = require('./Messages/MessagesController')
-const authRoutes = require('./controllers/auth')
-
-// Add CORS middleware
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-    
-    next();
-});
-
-app.use('/profiles', ProfileController)
-app.use('/', SystemController)
-app.use('/messages', MessagesController)
+// Routes
 app.use('/auth', authRoutes)
+app.use('/profiles', profileRoutes)
+app.use('/messages', messageRoutes)
+app.use('/system', systemRoutes)
 
-app.get('/',(req,res)=>res.status(200).send('Hello World'))
-// console.log(profiles)
+// MongoDB connection
+const connectWithRetry = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/typ', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 5000,
+            maxPoolSize: 10,
+            minPoolSize: 1
+        })
+        console.log('MongoDB connected')
+    } catch (error) {
+        console.error('MongoDB connection error:', error)
+        console.log('Retrying in 5 seconds...')
+        setTimeout(connectWithRetry, 5000)
+    }
+}
+
+connectWithRetry()
+
+// const PORT = process.env.PORT || 3000
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`)
+// })
 
 module.exports = app
