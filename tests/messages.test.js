@@ -1,5 +1,5 @@
 const supertest = require('supertest');
-const app = require('../index');
+const {app} = require('../index');
 const request = supertest(app);
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');

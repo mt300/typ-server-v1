@@ -37,10 +37,9 @@ router.get('/swipes', authenticateToken, async (req, res) => {
 
 // Get system status
 router.get('/status', (req, res) => {
-    res.json({
+    res.status(200).json({
         status: 'online',
-        version: '1.0.0',
-        uptime: process.uptime()
+        version: process.env.npm_package_version || '1.0.0'
     });
 });
 

@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { app, connectWithRetry, disconnect } = require('../index');
+const { app, startServer, stopServer } = require('../server'); // Import app as well
 const mongoose = require('mongoose');
 
 let server;
@@ -7,15 +7,12 @@ let server;
 jest.setTimeout(30000);
 
 beforeAll(async () => {
-    await connectWithRetry(true);
-    server = app.listen(3000);
+    server = await startServer();
 });
 
 afterAll(async () => {
-    if (server) {
-        await new Promise((resolve) => server.close(resolve));
-    }
-    await disconnect();
+    await stopServer(server);
+    await mongoose.disconnect();
 });
 
 describe('Server', () => {
@@ -34,5 +31,13 @@ describe('Server', () => {
         expect(response.headers['access-control-allow-origin']).toBe('*');
         expect(response.headers['access-control-allow-methods']).toBe('GET, POST, PUT, DELETE, OPTIONS');
         expect(response.headers['access-control-allow-headers']).toBe('Content-Type, Authorization');
+    });
+
+    test('should return system status', async () => {
+        const response = await request(app)
+            .get('/system/status');
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('status', 'online');
+        expect(response.body).toHaveProperty('version');
     });
 }); 

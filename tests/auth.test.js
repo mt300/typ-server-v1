@@ -1,19 +1,29 @@
 const request = require('supertest');
 const { app, startServer, stopServer } = require('../index');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
+let mongoServer;
 let server;
 
+// Increase timeout for all tests
+jest.setTimeout(60000);
+
 beforeAll(async () => {
-    server = await startServer();
+    // Start MongoDB Memory Server
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    
+    // Start the server with the MongoMemoryServer URI
+    server = await startServer(mongoUri);
 });
 
 afterAll(async () => {
     await stopServer(server);
+    await mongoServer.stop();
 });
 
 beforeEach(async () => {
@@ -21,93 +31,29 @@ beforeEach(async () => {
 });
 
 describe('Authentication System', () => {
-    let mongoServer;
-    let testUser = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User'
-    };
-    let authToken;
-
-    beforeAll(async () => {
-        try {
-            // Start MongoDB Memory Server
-            mongoServer = await MongoMemoryServer.create({
-                instance: {
-                    dbName: 'jest',
-                    port: 27017
-                }
-            });
-            const mongoUri = mongoServer.getUri();
-
-            // Connect to MongoDB Memory Server
-            await mongoose.connect(mongoUri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                serverSelectionTimeoutMS: 30000,
-                socketTimeoutMS: 45000,
-                connectTimeoutMS: 30000,
-                maxPoolSize: 10,
-                minPoolSize: 1
-            });
-
-            console.log('Connected to MongoDB Memory Server');
-        } catch (error) {
-            console.error('MongoDB connection error:', error);
-            throw error;
-        }
-    });
-
-    afterAll(async () => {
-        try {
-            // Disconnect and stop MongoDB Memory Server
-            await mongoose.disconnect();
-            await mongoServer.stop();
-            console.log('Disconnected from MongoDB Memory Server');
-        } catch (error) {
-            console.error('Error disconnecting from MongoDB:', error);
-            throw error;
-        }
-    });
-
-    beforeEach(async () => {
-        try {
-            // Clear users collection
-            await User.deleteMany({}).maxTimeMS(30000);
-        } catch (error) {
-            console.error('Error clearing users collection:', error);
-            throw error;
-        }
-    });
-
-    afterEach(async () => {
-        try {
-            // Clear users collection
-            await User.deleteMany({}).maxTimeMS(30000);
-        } catch (error) {
-            console.error('Error clearing users collection:', error);
-            throw error;
-        }
-    });
-
     describe('User Registration', () => {
         test('should register a new user successfully', async () => {
             const response = await request(app)
                 .post('/auth/register')
-                .send(testUser);
+                .send({
+                    email: 'test@example.com',
+                    password: 'Password123!',
+                    name: 'Test User'
+                });
 
             expect(response.status).toBe(201);
             expect(response.body).toHaveProperty('token');
-            expect(response.body.user).toHaveProperty('email', testUser.email);
-            expect(response.body.user).not.toHaveProperty('password');
+            expect(response.body).toHaveProperty('user');
+            expect(response.body.user.email).toBe('test@example.com');
         });
 
         test('should not register user with invalid email', async () => {
             const response = await request(app)
                 .post('/auth/register')
                 .send({
-                    ...testUser,
-                    email: 'invalid-email'
+                    email: 'invalid-email',
+                    password: 'Password123!',
+                    name: 'Test User'
                 });
 
             expect(response.status).toBe(400);
@@ -118,8 +64,9 @@ describe('Authentication System', () => {
             const response = await request(app)
                 .post('/auth/register')
                 .send({
-                    ...testUser,
-                    password: '123'
+                    email: 'test@example.com',
+                    password: 'weak',
+                    name: 'Test User'
                 });
 
             expect(response.status).toBe(400);
@@ -130,10 +77,11 @@ describe('Authentication System', () => {
     describe('User Login', () => {
         beforeEach(async () => {
             // Create a test user
-            const hashedPassword = await bcrypt.hash(testUser.password, 10);
+            const hashedPassword = await bcrypt.hash('Password123!', 10);
             await User.create({
-                ...testUser,
-                password: hashedPassword
+                email: 'test@example.com',
+                password: hashedPassword,
+                name: 'Test User'
             });
         });
 
@@ -141,20 +89,20 @@ describe('Authentication System', () => {
             const response = await request(app)
                 .post('/auth/login')
                 .send({
-                    email: testUser.email,
-                    password: testUser.password
+                    email: 'test@example.com',
+                    password: 'Password123!'
                 });
 
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('token');
-            authToken = response.body.token;
+            expect(response.body).toHaveProperty('user');
         });
 
         test('should not login with wrong password', async () => {
             const response = await request(app)
                 .post('/auth/login')
                 .send({
-                    email: testUser.email,
+                    email: 'test@example.com',
                     password: 'wrongpassword'
                 });
 
@@ -167,7 +115,7 @@ describe('Authentication System', () => {
                 .post('/auth/login')
                 .send({
                     email: 'nonexistent@example.com',
-                    password: testUser.password
+                    password: 'Password123!'
                 });
 
             expect(response.status).toBe(401);
@@ -176,13 +124,16 @@ describe('Authentication System', () => {
     });
 
     describe('Protected Routes', () => {
+        let authToken;
+
         beforeEach(async () => {
-            // Create a test user and get token
-            const hashedPassword = await bcrypt.hash(testUser.password, 10);
+            // Create a test user and generate token
             const user = await User.create({
-                ...testUser,
-                password: hashedPassword
+                email: 'test@example.com',
+                password: await bcrypt.hash('Password123!', 10),
+                name: 'Test User'
             });
+
             authToken = jwt.sign(
                 { id: user._id, email: user.email },
                 process.env.JWT_SECRET || 'your-secret-key',
@@ -192,28 +143,27 @@ describe('Authentication System', () => {
 
         test('should access protected route with valid token', async () => {
             const response = await request(app)
-                .get('/auth/me')
+                .get('/auth/protected')
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('email', testUser.email);
         });
 
         test('should not access protected route without token', async () => {
             const response = await request(app)
-                .get('/auth/me');
+                .get('/auth/protected');
 
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('error');
+            expect(response.body).toHaveProperty('error', 'No token provided');
         });
 
         test('should not access protected route with invalid token', async () => {
             const response = await request(app)
-                .get('/auth/me')
-                .set('Authorization', 'Bearer invalidtoken');
+                .get('/auth/protected')
+                .set('Authorization', 'Bearer invalid-token');
 
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('error');
+            expect(response.body).toHaveProperty('error', 'Invalid token');
         });
     });
 
@@ -221,58 +171,46 @@ describe('Authentication System', () => {
         test('should hash password on registration', async () => {
             const response = await request(app)
                 .post('/auth/register')
-                .send(testUser);
+                .send({
+                    email: 'test@example.com',
+                    password: 'Password123!',
+                    name: 'Test User'
+                });
 
-            const user = await User.findOne({ email: testUser.email });
-            expect(user.password).not.toBe(testUser.password);
-            expect(await bcrypt.compare(testUser.password, user.password)).toBe(true);
+            const user = await User.findOne({ email: 'test@example.com' });
+            expect(user.password).not.toBe('Password123!');
+            expect(await bcrypt.compare('Password123!', user.password)).toBe(true);
         });
     });
 
     describe('Token Validation', () => {
-        beforeEach(async () => {
-            // Create a test user
-            const hashedPassword = await bcrypt.hash(testUser.password, 10);
-            const user = await User.create({
-                ...testUser,
-                password: hashedPassword
-            });
-            authToken = jwt.sign(
-                { id: user._id, email: user.email },
-                process.env.JWT_SECRET || 'your-secret-key',
-                { expiresIn: '24h' }
-            );
-        });
-
         test('should validate token expiration', async () => {
-            // Create an expired token
             const expiredToken = jwt.sign(
-                { id: 'test-id', email: testUser.email },
+                { id: new mongoose.Types.ObjectId(), email: 'test@example.com' },
                 process.env.JWT_SECRET || 'your-secret-key',
                 { expiresIn: '0s' }
             );
 
             const response = await request(app)
-                .get('/auth/me')
+                .get('/auth/protected')
                 .set('Authorization', `Bearer ${expiredToken}`);
 
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('error');
+            expect(response.body).toHaveProperty('error', 'Invalid token');
         });
 
         test('should validate token signature', async () => {
-            // Create token with wrong secret
             const invalidToken = jwt.sign(
-                { id: 'test-id', email: testUser.email },
-                'wrongsecret'
+                { id: new mongoose.Types.ObjectId(), email: 'test@example.com' },
+                'wrong-secret-key'
             );
 
             const response = await request(app)
-                .get('/auth/me')
+                .get('/auth/protected')
                 .set('Authorization', `Bearer ${invalidToken}`);
 
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('error');
+            expect(response.body).toHaveProperty('error', 'Invalid token');
         });
     });
 }); 

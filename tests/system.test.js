@@ -1,5 +1,6 @@
 const supertest = require('supertest');
-const app = require('../index');
+// const app = require('../index');
+const {app} = require('../server');
 const request = supertest(app);
 
 const ProfileRepository = require('../data/profiles');
