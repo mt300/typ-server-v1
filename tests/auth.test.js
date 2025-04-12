@@ -143,7 +143,7 @@ describe('Authentication System', () => {
 
         test('should access protected route with valid token', async () => {
             const response = await request(app)
-                .get('/auth/protected')
+                .get('/auth/me')
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);
@@ -151,7 +151,7 @@ describe('Authentication System', () => {
 
         test('should not access protected route without token', async () => {
             const response = await request(app)
-                .get('/auth/protected');
+                .get('/auth/me');
 
             expect(response.status).toBe(401);
             expect(response.body).toHaveProperty('error', 'No token provided');
@@ -159,7 +159,7 @@ describe('Authentication System', () => {
 
         test('should not access protected route with invalid token', async () => {
             const response = await request(app)
-                .get('/auth/protected')
+                .get('/auth/me')
                 .set('Authorization', 'Bearer invalid-token');
 
             expect(response.status).toBe(401);
@@ -192,11 +192,11 @@ describe('Authentication System', () => {
             );
 
             const response = await request(app)
-                .get('/auth/protected')
+                .get('/auth/me')
                 .set('Authorization', `Bearer ${expiredToken}`);
 
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('error', 'Invalid token');
+            expect(response.body).toHaveProperty('error', 'Token expired');
         });
 
         test('should validate token signature', async () => {
@@ -206,7 +206,7 @@ describe('Authentication System', () => {
             );
 
             const response = await request(app)
-                .get('/auth/protected')
+                .get('/auth/me')
                 .set('Authorization', `Bearer ${invalidToken}`);
 
             expect(response.status).toBe(401);
