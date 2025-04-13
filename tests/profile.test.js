@@ -137,6 +137,22 @@ describe('Profile Management', () => {
     });
 
     describe('Profile Photos', () => {
+        beforeEach(async () => {
+            // Create a profile for the test user
+            await Profile.create({
+                userId: testUser._id,
+                name: 'Test User',
+                age: 25,
+                gender: 'male',
+                location: {
+                    city: 'Test City',
+                    state: 'TS',
+                    latitude: -12.97,
+                    longitude: -38.50
+                }
+            });
+        });
+
         test('should allow uploading profile photos', async () => {
             const response = await request
                 .post('/profiles/photos')
@@ -193,6 +209,22 @@ describe('Profile Management', () => {
     });
 
     describe('Profile Verification', () => {
+        beforeEach(async () => {
+            // Create a profile for the test user
+            await Profile.create({
+                userId: testUser._id,
+                name: 'Test User',
+                age: 25,
+                gender: 'male',
+                location: {
+                    city: 'Test City',
+                    state: 'TS',
+                    latitude: -12.97,
+                    longitude: -38.50
+                }
+            });
+        });
+
         test('should allow submitting verification request', async () => {
             const response = await request
                 .post('/profiles/verify')
@@ -225,7 +257,7 @@ describe('Profile Management', () => {
                     contentType: 'image/jpeg'
                 });
 
-            expect(response.status).toBe(400);
+            expect(response.status).toBe(409);
             expect(response.body).toHaveProperty('error', 'Verification request already pending');
         });
     });

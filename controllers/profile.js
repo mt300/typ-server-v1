@@ -6,6 +6,7 @@ const fs = require('fs');
 const Profile = require('../models/Profile');
 const { authenticateToken } = require('../middleware/auth');
 const profiles = require('../data/profiles');
+const { validateProfileData, validateLocation } = require('../utils/validation');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -22,25 +23,63 @@ const storage = multer.diskStorage({
     }
 });
 
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid image format. Only JPEG and PNG are allowed.'), false);
+    }
+};
+
 const upload = multer({
     storage,
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB limit
         files: 6 // Maximum 6 photos
     },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png'];
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
-        }
-    }
+    fileFilter
 });
 
 // Get all profiles
-router.get('/', (req, res) => {
-    res.json(profiles);
+router.get('/', authenticateToken, async (req, res) => {
+    try {
+        const { maxDistance, ageRange, gender } = req.query;
+        const userProfile = await Profile.findOne({ userId: req.user.id });
+        
+        if (!userProfile) {
+            return res.status(404).json({ error: 'User profile not found' });
+        }
+
+        const query = {};
+        if (gender) query.gender = gender;
+        if (ageRange) {
+            const [min, max] = ageRange.split('-');
+            query.age = { $gte: parseInt(min), $lte: parseInt(max) };
+        }
+
+        if (maxDistance && userProfile.location) {
+            query.location = {
+                $near: {
+                    $geometry: {
+                        type: 'Point',
+                        coordinates: [userProfile.location.longitude, userProfile.location.latitude]
+                    },
+                    $maxDistance: parseInt(maxDistance) * 1000 // Convert km to meters
+                }
+            };
+        }
+
+        const profiles = await Profile.find({
+            ...query,
+            userId: { $ne: req.user.id },
+            _id: { $nin: userProfile.likes }
+        });
+
+        res.json(profiles);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Get profile by ID
@@ -57,68 +96,79 @@ router.get('/:id', (req, res) => {
 // Create new profile
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const profile = req.body;
-        if(profiles.find(prof => prof.email === profile.email)){
-            res.status(400).json({error:"Email já cadastrado"});
-            return;
+        // Check if user already has a profile
+        const existingProfile = await Profile.findOne({ userId: req.user.id });
+        if (existingProfile) {
+            return res.status(400).json({ error: 'User already has a profile' });
         }
-        if(!profile.name || !profile.age || !profile.location || !profile){
-            res.status(400).json({error:"Dados inválidos"});
-            return;
+
+        const profileData = {
+            ...req.body,
+            userId: req.user.id
+        };
+
+        // Validate profile data
+        const validationError = validateProfileData(profileData);
+        if (validationError) {
+            return res.status(400).json({ error: validationError });
         }
-        const newID = (profiles.length<9?'00':'0') + (profiles.length + 1);
-        profiles.push({...profile, id:newID , likes: [], matches: []});
-        
-        res.status(201).json({...profile, id: newID, likes: [], matches: []});
+
+        // Validate location if provided
+        if (profileData.location) {
+            const locationError = validateLocation(profileData.location);
+            if (locationError) {
+                return res.status(400).json({ error: locationError });
+            }
+        }
+
+        const profile = new Profile(profileData);
+        await profile.save();
+        res.status(201).json(profile);
     } catch (error) {
-        console.error('Profile creation error:', error);
-        res.status(400).json({ error: error.message });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ error: error.message });
+        }
+        res.status(500).json({ error: error.message });
     }
 });
 
 // Like a profile
-router.post('/like/', authenticateToken, (req, res) => {
+router.post('/like/:profileId', authenticateToken, async (req, res) => {
     try {
-        const { userId, profileId } = req.body;
-        if(!profileId || !userId){
-            res.status(400).send("Invalid Request Parameters");
-            return;
+        const userProfile = await Profile.findOne({ userId: req.user.id });
+        if (!userProfile) {
+            return res.status(404).json({ error: 'Your profile not found' });
         }
-        if(userId === profileId){
-            res.status(400).json({error:"Usuário não pode curtir a si mesmo"});
-            return;
+
+        const targetProfile = await Profile.findById(req.params.profileId);
+        if (!targetProfile) {
+            return res.status(404).json({ error: 'Target profile not found' });
         }
-        if(!profiles.find(profile => profile.id === profileId)){
-            res.status(404).json({error:"Perfil não encontrado"});
-            return;
+
+        if (targetProfile.userId.toString() === req.user.id) {
+            return res.status(400).json({ error: 'Cannot like your own profile' });
         }
-        if(!profiles.find(profile => profile.id === userId)){
-            res.status(404).json({error:"Usuário não encontrado"});
-            return;
+
+        // Check if already liked
+        if (userProfile.likes.includes(targetProfile._id)) {
+            return res.status(400).json({ error: 'Profile already liked' });
         }
-        
-        const profile = profiles.find(profile => profile.id === profileId);
-        const user = profiles.find(profile => profile.id === userId);
-        
-        if(user.likes.includes(profileId)){
-            res.status(400).json({error:"Usuário já curtiu esse perfil"});
-            return;
+
+        // Add like
+        userProfile.likes.push(targetProfile._id);
+        await userProfile.save();
+
+        // Check for mutual like (match)
+        if (targetProfile.likes.includes(userProfile._id)) {
+            userProfile.matches.push(targetProfile._id);
+            targetProfile.matches.push(userProfile._id);
+            await Promise.all([userProfile.save(), targetProfile.save()]);
+            return res.json({ match: true, profile: targetProfile });
         }
-        if(profile.likes.includes(userId)){
-            //Webhook to send notification to user 
-            user.likes.push(profileId);
-            user.matches.push(profileId);
-            profile.matches.push(userId);
-            res.status(200).send("It's a Match!!!");
-            return;
-        }else{
-            user.likes.push(profileId);
-            res.status(200).send("Liked!");
-            return;
-        }
+
+        res.json({ match: false, profile: targetProfile });
     } catch (error) {
-        console.error('Like error:', error);
-        res.status(500).json({text:"Internal error",error:"unchecked error"});
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -183,26 +233,42 @@ router.get('/swipes/:id', (req, res) => {
 });
 
 // Upload profile photos
-router.post('/photos', authenticateToken, upload.array('photos', 6), async (req, res) => {
-    try {
-        const profile = await Profile.findOne({ userId: req.user.id });
-        if (!profile) {
-            return res.status(404).json({ error: 'Profile not found' });
+router.post('/photos', authenticateToken, (req, res) => {
+    upload.array('photos', 6)(req, res, async (err) => {
+        try {
+            if (err) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ error: 'Image too large' });
+                }
+                if (err.message.includes('Invalid image format')) {
+                    return res.status(400).json({ error: 'Invalid image format' });
+                }
+                return res.status(400).json({ error: err.message });
+            }
+
+            const profile = await Profile.findOne({ userId: req.user.id });
+            if (!profile) {
+                return res.status(404).json({ error: 'Profile not found' });
+            }
+
+            if (!req.files || req.files.length === 0) {
+                return res.status(400).json({ error: 'No photos uploaded' });
+            }
+
+            const newPhotos = req.files.map(file => ({
+                url: file.path,
+                isPrimary: profile.photos.length === 0 // First photo becomes primary
+            }));
+
+            profile.photos.push(...newPhotos);
+            await profile.save();
+
+            res.status(201).json({ photos: profile.photos });
+        } catch (error) {
+            console.error('Photo upload error:', error);
+            res.status(500).json({ error: error.message });
         }
-
-        const newPhotos = req.files.map(file => ({
-            url: file.path,
-            isPrimary: profile.photos.length === 0 // First photo becomes primary
-        }));
-
-        profile.photos.push(...newPhotos);
-        await profile.save();
-
-        res.status(201).json({ photos: profile.photos });
-    } catch (error) {
-        console.error('Photo upload error:', error);
-        res.status(400).json({ error: error.message });
-    }
+    });
 });
 
 // Set primary photo
@@ -387,22 +453,27 @@ router.post('/verify', authenticateToken, upload.single('verification'), async (
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
+        console.log("profile", profile);
 
-        if (profile.verification.status === 'pending') {
-            return res.status(400).json({ error: 'Verification request already pending' });
+        // Check verification status before file upload
+        if (profile.verification.status === 'pending' || profile.verification.status === 'approved') {
+            return res.status(409).json({ error: 'Verification request already pending' });
         }
 
-        profile.verification = {
-            status: 'pending',
-            documentUrl: req.file.path,
-            submittedAt: new Date()
-        };
+        if (!req.file) {
+            return res.status(422).json({ error: 'No verification photo provided' });
+        }
 
+        profile.verificationPhoto = {
+            data: req.file.buffer,
+            contentType: req.file.mimetype
+        };
+        profile.verification.status = 'pending';
         await profile.save();
-        res.status(201).json(profile.verification);
+
+        res.status(201).json({ status: profile.verification.status });
     } catch (error) {
-        console.error('Verification submission error:', error);
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
