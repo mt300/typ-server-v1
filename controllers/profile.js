@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Profile = require('../models/Profile');
 const { authenticateToken } = require('../middleware/auth');
-const profiles = require('../data/profiles');
+// const profiles = require('../data/profiles');
 const { validateProfileData, validateLocation } = require('../utils/validation');
 
 // Configure multer for file uploads

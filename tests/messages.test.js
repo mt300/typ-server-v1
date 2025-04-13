@@ -1,5 +1,5 @@
 const supertest = require('supertest');
-const {app} = require('../index');
+const {app, startServer, stopServer} = require('../index');
 const request = supertest(app);
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -12,12 +12,14 @@ describe('Messages Controller', () => {
     let authToken;
     let testUser;
     let testUser2;
-
+    let server
     beforeAll(async () => {
         try {
             mongoServer = await MongoMemoryServer.create();
+            // console.log('mongoServer:', mongoServer)
             const mongoUri = mongoServer.getUri();
-
+            server = await startServer(mongoUri)
+            
             await mongoose.connect(mongoUri, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
@@ -56,6 +58,7 @@ describe('Messages Controller', () => {
     afterAll(async () => {
         try {
             await mongoose.disconnect();
+            await stopServer(server);
             await mongoServer.stop();
         } catch (error) {
             console.error('Cleanup error:', error);
@@ -77,7 +80,7 @@ describe('Messages Controller', () => {
             });
 
             const response = await request
-                .get(`/api/messages/${testUser2._id}`)
+                .get(`/messages/${testUser2._id}`)
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);
@@ -89,7 +92,7 @@ describe('Messages Controller', () => {
     describe('POST /', () => {
         test('should send a message', async () => {
             const response = await request
-                .post('/api/messages')
+                .post('/messages')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({
                     recipientId: testUser2._id,
@@ -102,7 +105,7 @@ describe('Messages Controller', () => {
 
         test('should return 400 if content is missing', async () => {
             const response = await request
-                .post('/api/messages')
+                .post('/messages')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({
                     recipientId: testUser2._id
@@ -121,9 +124,10 @@ describe('Messages Controller', () => {
             });
 
             const response = await request
-                .put(`/api/messages/${message._id}/read`)
+                .put(`/messages/${message._id}/read`)
                 .set('Authorization', `Bearer ${authToken}`);
 
+            console.log("response",response)
             expect(response.status).toBe(200);
             expect(response.body.read).toBe(true);
         });
@@ -138,7 +142,7 @@ describe('Messages Controller', () => {
             });
 
             const response = await request
-                .delete(`/api/messages/${message._id}`)
+                .delete(`/messages/${message._id}`)
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);

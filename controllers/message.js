@@ -79,7 +79,7 @@ router.delete('/:messageId', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Not authorized to delete this message' });
         }
 
-        await message.remove();
+        await Message.deleteOne({ id: req.user.id });
         res.status(200).json({ message: 'Message deleted' });
     } catch (error) {
         console.error('Delete message error:', error);

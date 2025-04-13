@@ -122,7 +122,7 @@ describe('Matching System', () => {
     describe('Distance-Based Matching', () => {
         test('should return only users within specified max distance', async () => {
             const response = await request
-                .get('/api/profiles/swipes')
+                .get('/profiles/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -151,7 +151,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/api/profiles/swipes')
+                .get('/profiles/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -195,7 +195,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/api/profiles/swipes')
+                .get('/profiles/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -226,7 +226,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/api/profiles/swipes')
+                .get('/profiles/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -244,7 +244,7 @@ describe('Matching System', () => {
         test('should create match when both users like each other', async () => {
             // First user likes second user
             await request
-                .post('/api/profiles/like')
+                .post('/profiles/like')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({ profileId: otherProfile._id });
 
@@ -257,7 +257,7 @@ describe('Matching System', () => {
 
             // Second user likes first user
             const response = await request
-                .post('/api/profiles/like')
+                .post('/profiles/like')
                 .set('Authorization', `Bearer ${otherToken}`)
                 .send({ profileId: testProfile._id });
 
@@ -285,7 +285,7 @@ describe('Matching System', () => {
 
             // Try to create same match again
             const response = await request
-                .post('/api/profiles/like')
+                .post('/profiles/like')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({ profileId: otherProfile._id });
 
@@ -303,7 +303,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/api/profiles/matches')
+                .get('/profiles/matches')
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);
@@ -322,7 +322,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .delete(`/api/profiles/matches/${match._id}`)
+                .delete(`/profiles/matches/${match._id}`)
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(response.status).toBe(200);
@@ -336,14 +336,14 @@ describe('Matching System', () => {
     describe('Error Cases', () => {
         test('should return 401 without authentication', async () => {
             const response = await request
-                .get('/api/profiles/matches');
+                .get('/profiles/matches');
 
             expect(response.status).toBe(401);
         });
 
         test('should return 400 for nonexistent profile', async () => {
             const response = await request
-                .post('/api/profiles/like')
+                .post('/profiles/like')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({ profileId: new mongoose.Types.ObjectId() });
 

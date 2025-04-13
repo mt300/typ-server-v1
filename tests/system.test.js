@@ -3,7 +3,7 @@ const supertest = require('supertest');
 const {app} = require('../server');
 const request = supertest(app);
 
-const ProfileRepository = require('../data/profiles');
+// const ProfileRepository = require('../data/profiles');
 
 describe('System Controller', () => {
     test('should return system status', async () => {
