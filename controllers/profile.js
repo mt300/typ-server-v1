@@ -84,13 +84,23 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // Get profile by ID
 router.get('/:id', (req, res) => {
-    const id = req.params.id;
-    const profile = profiles.find(profile => profile.id === id);
-    if (!profile) {
-        res.status(404).send('Profile not found');
-        return;
+    try{
+
+        const id = req.params.id;
+        const profile = Profile.findOne({
+            where:{
+                id:profile.id
+            }
+        });
+        if (!profile) {
+            res.status(404).send('Profile not found');
+            return;
+        }
+        res.json(profile);
+    }catch(err){
+        // console.error('Error fetching profile:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-    res.json(profile);
 });
 
 // Create new profile
@@ -135,6 +145,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Like a profile
 router.post('/like/:profileId', authenticateToken, async (req, res) => {
     try {
+        console.log('PARAMETORS', req.params.profileId)
         const userProfile = await Profile.findOne({ userId: req.user.id });
         if (!userProfile) {
             return res.status(404).json({ error: 'Your profile not found' });
@@ -175,7 +186,11 @@ router.post('/like/:profileId', authenticateToken, async (req, res) => {
 // Get matches
 router.get('/:id/matches', (req, res) => {
     const id = req.params.id;
-    const profile = profiles.find(profile => profile.id === id);
+    const profile = Profile.findOne({
+        where:{
+            id:profile.id
+        }
+    });
     if (!profile) {
         res.status(404).send('Profile not found');
         return;

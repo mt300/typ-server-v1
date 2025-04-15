@@ -6,18 +6,35 @@ const Match = require('../models/Match')
 // Get all matches for current user
 router.get('/', async (req, res) => {
     try {
-        const userId = req.user.id
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const userId = req.user.id;
+
+        // Encontre todos os matches do usuário autenticado
         const matches = await Match.find({
             $or: [{ user1: userId }, { user2: userId }],
             status: 'matched'
-        }).populate('user1 user2', 'name photos preferences')
+        });
 
-        res.json(matches)
-    } catch (error) {
-        console.error('Error fetching matches:', error)
-        res.status(500).json({ error: 'Failed to fetch matches' })
+        // Pegue os IDs dos "outros usuários" nos matches
+        const matchedUserIds = matches.map(match => {
+            return match.user1.toString() === userId ? match.user2 : match.user1;
+        });
+
+        // Busque os perfis dos usuários que deram match com o usuário autenticado
+        const matchedProfiles = await Profile.find({
+            userId: { $in: matchedUserIds }
+        });
+
+        return res.status(200).json(matchedProfiles);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Server error' });
     }
-})
+});
+
 
 // Get match history
 router.get('/history', async (req, res) => {
@@ -30,7 +47,7 @@ router.get('/history', async (req, res) => {
 
         res.json(matches)
     } catch (error) {
-        console.error('Error fetching match history:', error)
+        // console.error('Error fetching match history:', error)
         res.status(500).json({ error: 'Failed to fetch match history' })
     }
 })
@@ -52,7 +69,7 @@ router.get('/:matchId', async (req, res) => {
 
         res.json(match)
     } catch (error) {
-        console.error('Error fetching match details:', error)
+        // console.error('Error fetching match details:', error)
         res.status(500).json({ error: 'Failed to fetch match details' })
     }
 })
@@ -76,7 +93,7 @@ router.delete('/:matchId', async (req, res) => {
 
         res.json({ message: 'Successfully unmatched' })
     } catch (error) {
-        console.error('Error unmatching:', error)
+        // console.error('Error unmatching:', error)
         res.status(500).json({ error: 'Failed to unmatch' })
     }
 })

@@ -49,6 +49,11 @@ describe('Messages Controller', () => {
                 process.env.JWT_SECRET || 'your-secret-key',
                 { expiresIn: '24h' }
             );
+            authToken2 = jwt.sign(
+                { id: testUser2._id, email: testUser2.email },
+                process.env.JWT_SECRET || 'your-secret-key',
+                { expiresIn: '24h' }
+            );
         } catch (error) {
             console.error('Setup error:', error);
             throw error;
@@ -125,9 +130,9 @@ describe('Messages Controller', () => {
 
             const response = await request
                 .put(`/messages/${message._id}/read`)
-                .set('Authorization', `Bearer ${authToken}`);
+                .set('Authorization', `Bearer ${authToken2}`);
 
-            console.log("response",response)
+            // console.log("response",response)
             expect(response.status).toBe(200);
             expect(response.body.read).toBe(true);
         });

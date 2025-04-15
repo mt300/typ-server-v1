@@ -16,6 +16,7 @@ beforeAll(async () => {
     // Start MongoDB Memory Server
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
+
     
     // Start the server with the MongoMemoryServer URI
     server = await startServer(mongoUri);

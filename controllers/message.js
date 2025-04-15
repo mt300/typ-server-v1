@@ -51,9 +51,9 @@ router.put('/:messageId/read', authenticateToken, async (req, res) => {
         if (!message) {
             return res.status(404).json({ error: 'Message not found' });
         }
-
+        console.log('Recipient', message.recipient.toString())
         if (message.recipient.toString() !== req.user.id) {
-            return res.status(403).json({ error: 'Not authorized to mark this message as read' });
+            return res.status(405).json({ error: 'Not authorized to mark this message as read' });
         }
 
         message.read = true;
