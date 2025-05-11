@@ -9,7 +9,7 @@ const systemRoutes = require('./controllers/system');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 9000;
 
 // CORS configuration
 const corsOptions = {
@@ -30,12 +30,12 @@ app.use('/matches', matchRoutes);
 app.use('/system', systemRoutes);
 
 // System status route
-app.get('/system/status', (req, res) => {
-    res.status(200).json({
-        status: 'online',
-        version: process.env.npm_package_version || '1.0.0'
-    });
-});
+// app.get('/system/status', (req, res) => {
+//     res.status(200).json({
+//         status: 'online',
+//         version: process.env.npm_package_version || '1.0.0'
+//     });
+// });
 
 // Error handling
 app.use(errorHandler);
@@ -50,7 +50,7 @@ const connectDB = async (customUri) => {
             socketTimeoutMS: 45000,
             connectTimeoutMS: 30000
         });
-        console.log('MongoDB connected successfully');
+        // console.log('MongoDB connected successfully');
     } catch (error) {
         console.error('MongoDB connection error:', error);
         if (process.env.NODE_ENV !== 'test') {
@@ -63,7 +63,7 @@ const connectDB = async (customUri) => {
 const disconnectDB = async () => {
     try {
         await mongoose.disconnect();
-        console.log('MongoDB disconnected successfully');
+        // console.log('MongoDB disconnected successfully');
     } catch (error) {
         console.error('MongoDB disconnection error:', error);
     }
@@ -94,7 +94,7 @@ const stopServer = async (server) => {
                 }
             });
         });
-        console.log('Server stopped');
+        // console.log('Server stopped');
     } catch (err) {
         console.error('Error stopping server:', err);
         throw err;

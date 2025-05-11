@@ -17,6 +17,16 @@ Content-Type: application/json
 }
 
 
+
+### Login user
+POST http://localhost:9000/auth/login
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "senha1234"
+}
+
 ### Update profile
 PUT http://localhost:9000/profiles/1
 Content-Type: application/json

@@ -1,6 +1,6 @@
 const supertest = require('supertest');
 const { app, startServer, stopServer } = require('../index');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../models/User');
 const Profile = require('../models/Profile');

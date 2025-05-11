@@ -145,7 +145,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Like a profile
 router.post('/like/:profileId', authenticateToken, async (req, res) => {
     try {
-        console.log('PARAMETORS', req.params.profileId)
+        // console.log('PARAMETORS', req.params.profileId)
         const userProfile = await Profile.findOne({ userId: req.user.id });
         if (!userProfile) {
             return res.status(404).json({ error: 'Your profile not found' });
@@ -179,6 +179,7 @@ router.post('/like/:profileId', authenticateToken, async (req, res) => {
 
         res.json({ match: false, profile: targetProfile });
     } catch (error) {
+        console.error("Erro interno ao dar Like", error)
         res.status(500).json({ error: error.message });
     }
 });
@@ -186,11 +187,7 @@ router.post('/like/:profileId', authenticateToken, async (req, res) => {
 // Get matches
 router.get('/:id/matches', (req, res) => {
     const id = req.params.id;
-    const profile = Profile.findOne({
-        where:{
-            id:profile.id
-        }
-    });
+    const profile = Profile.find({id:profile.id});
     if (!profile) {
         res.status(404).send('Profile not found');
         return;
@@ -468,7 +465,7 @@ router.post('/verify', authenticateToken, upload.single('verification'), async (
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
-        console.log("profile", profile);
+        // console.log("profile", profile);
 
         // Check verification status before file upload
         if (profile.verification.status === 'pending' || profile.verification.status === 'approved') {

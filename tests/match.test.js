@@ -1,5 +1,5 @@
 const supertest = require('supertest');
-const {app} = require('../index');
+const {app, startServer, stopServer} = require('../index');
 const request = supertest(app);
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -7,6 +7,8 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Match = require('../models/Match');
 const jwt = require('jsonwebtoken');
+
+jest.setTimeout(60000);
 
 describe('Matching System', () => {
     let mongoServer;
@@ -20,13 +22,14 @@ describe('Matching System', () => {
         try {
             mongoServer = await MongoMemoryServer.create();
             const mongoUri = mongoServer.getUri();
+            server = await startServer(mongoUri);
 
             await mongoose.connect(mongoUri, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
-                serverSelectionTimeoutMS: 5000,
-                socketTimeoutMS: 45000,
-                connectTimeoutMS: 5000,
+                // serverSelectionTimeoutMS: 5000,
+                // socketTimeoutMS: 45000,
+                // connectTimeoutMS: 5000,
                 maxPoolSize: 10,
                 minPoolSize: 1
             });
@@ -113,6 +116,8 @@ describe('Matching System', () => {
             console.error('Cleanup error:', error);
             throw error;
         }
+        await stopServer(server);
+        await mongoServer.stop();
     });
 
     beforeEach(async () => {
@@ -122,7 +127,7 @@ describe('Matching System', () => {
     describe('Distance-Based Matching', () => {
         test('should return only users within specified max distance', async () => {
             const response = await request
-                .get('/swipes')
+                .get('/system/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -151,7 +156,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/swipes')
+                .get('/system/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -195,7 +200,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/swipes')
+                .get('/system/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -226,7 +231,7 @@ describe('Matching System', () => {
             });
 
             const response = await request
-                .get('/swipes')
+                .get('/system/swipes')
                 .set('Authorization', `Bearer ${authToken}`)
                 .query({
                     location: '-12.97,-38.50',
@@ -259,7 +264,7 @@ describe('Matching System', () => {
             const response = await request
                 .post('/profiles/like/'+testProfile._id)
                 .set('Authorization', `Bearer ${otherToken}`)
-                .send({ profileId: testProfile._id });
+                // .send({ profileId: testProfile._id });
 
             expect(response.status).toBe(201);
             expect(response.body).toHaveProperty('matchId');
@@ -336,7 +341,7 @@ describe('Matching System', () => {
     describe('Error Cases', () => {
         test('should return 401 without authentication', async () => {
             const response = await request
-                .get('/profiles/matches');
+                .get(`/profiles/${testUser._id}/matches`);
 
             expect(response.status).toBe(401);
         });

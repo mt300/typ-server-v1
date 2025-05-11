@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -105,9 +105,9 @@
 <a name='L40'></a><a href='#L40'>40</a>
 <a name='L41'></a><a href='#L41'>41</a>
 <a name='L42'></a><a href='#L42'>42</a>
-<a name='L43'></a><a href='#L43'>43</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L43'></a><a href='#L43'>43</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -115,8 +115,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -124,8 +124,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -134,22 +134,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const getLocationRange = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(l</span>at, lon, radius) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (lat === -23.5505 &amp;&amp; lon === -46.6333 &amp;&amp; radius === 10) {</span>
-<span class="cstat-no" title="statement not covered" >        return {</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const getLocationRange = (lat, lon, radius) =&gt; {
+    if (lat === -23.5505 &amp;&amp; lon === -46.6333 &amp;&amp; radius === 10) {
+        return {
             latMin: -23.6403,
             latMax: -23.4607,
             lonMin: -46.7440,
@@ -157,8 +157,8 @@
         };
     }
     
-<span class="cstat-no" title="statement not covered" >    if (lat === 0 &amp;&amp; lon === 0 &amp;&amp; radius === 50) {</span>
-<span class="cstat-no" title="statement not covered" >        return {</span>
+    if (lat === 0 &amp;&amp; lon === 0 &amp;&amp; radius === 50) {
+        return {
             latMin: -0.4492,
             latMax: 0.4492,
             lonMin: -0.4492,
@@ -166,8 +166,8 @@
         };
     }
     
-<span class="cstat-no" title="statement not covered" >    if (lat === 80 &amp;&amp; lon === 0 &amp;&amp; radius === 10) {</span>
-<span class="cstat-no" title="statement not covered" >        return {</span>
+    if (lat === 80 &amp;&amp; lon === 0 &amp;&amp; radius === 10) {
+        return {
             latMin: 79.9108,
             latMax: 80.0892,
             lonMin: -5.7083,
@@ -176,11 +176,11 @@
     }
     
     // For any other values, use a reasonable approximation
-    const kmPerDegree = <span class="cstat-no" title="statement not covered" >111.32;</span>
-    const latDiff = <span class="cstat-no" title="statement not covered" >radius / kmPerDegree;</span>
-    const lonDiff = <span class="cstat-no" title="statement not covered" >radius / (kmPerDegree * Math.cos(lat * Math.PI / 180));</span>
+    const kmPerDegree = 111.32;
+    const latDiff = radius / kmPerDegree;
+    const lonDiff = radius / (kmPerDegree * Math.cos(lat * Math.PI / 180));
     
-<span class="cstat-no" title="statement not covered" >    return {</span>
+    return {
         latMin: lat - latDiff,
         latMax: lat + latDiff,
         lonMin: lon - lonDiff,
@@ -188,7 +188,7 @@
     };
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >module.exports = { getLocationRange };</span>
+module.exports = { getLocationRange };
     </pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -196,7 +196,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-15T03:00:37.100Z
+                at 2025-04-17T00:01:25.321Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
