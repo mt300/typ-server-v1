@@ -8,6 +8,17 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    phone: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    verification: {
+        type: String,
+        required: false,
+        trim: true
+    },
     password: {
         type: String,
         required: true

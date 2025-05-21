@@ -1,9 +1,11 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Profile = require('../models/Profile');
+const User = require('../models/User')
 const { authenticateToken } = require('../middleware/auth');
 // const profiles = require('../data/profiles');
 const { validateProfileData, validateLocation } = require('../utils/validation');
@@ -45,8 +47,17 @@ const upload = multer({
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { maxDistance, ageRange, gender } = req.query;
-        const userProfile = await Profile.findOne({ userId: req.user.id });
-        
+        const userId = new mongoose.Types.ObjectId(req.user.id);
+        console.log('Req User', req.user)
+        console.log('UserId', userId)
+        const user = await User.findOne({email:req.user.email})
+        console.log('user', user)
+        const userProfile = await Profile.findOne({ userId:user._id });
+        // const userProfile = await Profile.findOne({ userId: req.user.id });
+        // const all = await Profile.find()
+
+        console.log('UserProfile', userProfile)
+        // console.log('All PRofiles', all)
         if (!userProfile) {
             return res.status(404).json({ error: 'User profile not found' });
         }
@@ -87,11 +98,7 @@ router.get('/:id', (req, res) => {
     try{
 
         const id = req.params.id;
-        const profile = Profile.findOne({
-            where:{
-                id:profile.id
-            }
-        });
+        const profile = Profile.findOne({userId:id});
         if (!profile) {
             res.status(404).send('Profile not found');
             return;
@@ -105,6 +112,9 @@ router.get('/:id', (req, res) => {
 
 // Create new profile
 router.post('/', authenticateToken, async (req, res) => {
+    // console.log('Req', req.body)
+    // console.log('Req', req.user)
+
     try {
         // Check if user already has a profile
         const existingProfile = await Profile.findOne({ userId: req.user.id });
@@ -114,6 +124,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const profileData = {
             ...req.body,
+            name: req.user.name,
             userId: req.user.id
         };
 
@@ -413,12 +424,13 @@ router.put('/preferences', authenticateToken, async (req, res) => {
 
 // Get user's own profile
 router.get('/me', authenticateToken, async (req, res) => {
+    console.log('Req User', req.user)
     try {
         const profile = await Profile.findOne({ userId: req.user.id });
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
-
+        console.log('Profile', profile)
         res.json(profile);
     } catch (error) {
         console.error('Get profile error:', error);

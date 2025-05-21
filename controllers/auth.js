@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Profile = require('../models/Profile');
 const {
     hashPassword,
     comparePasswords,
@@ -15,10 +16,10 @@ const {
 // Register new user
 router.post('/register', async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { email, password, name, phone } = req.body;
 
         // Validate input
-        if (!email || !password || !name) {
+        if (!email || !password || !name || !phone) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -43,14 +44,29 @@ router.post('/register', async (req, res) => {
         const user = new User({
             email,
             password: hashedPassword,
-            name
+            name,
+            phone,
         });
 
         await user.save();
 
+        const profile = new Profile({
+            userId: user._id,
+            name,
+            gender: 'other',
+            age: 18, // Default age
+            location: {
+                city: 'Default City',
+                state: 'Default State',
+                latitude: 0,
+                longitude: 0
+            },
+        })
+        await profile.save();
+
         // Generate token
         const token = jwt.sign(
-            { id: user._id, email: user.email },
+            { id: user._id, email: user.email, name: user.name },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
@@ -60,7 +76,8 @@ router.post('/register', async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                phone: user.phone
             }
         });
     } catch (error) {
@@ -92,11 +109,11 @@ router.post('/login', async (req, res) => {
 
         // Generate token
         const token = jwt.sign(
-            { id: user._id, email: user.email },
+            { id: user._id, email: user.email , name: user.name},
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
-
+        console.log('Login Sucesso!', token)
         res.json({
             token,
             user: {
@@ -129,5 +146,11 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/register', (req, res) => {
     res.status(400).json({ error: 'Missing required fields' });
 });
+
+router.get('/users', async (req,res) => {
+    const users = await User.find({})
+    console.log('users',users)
+    res.json({users})
+})
 
 module.exports = router; 

@@ -1,31 +1,54 @@
-### Get all profiles
-GET http://localhost:9000/profiles
-Content-Type: application/json
-
 ### Get profile by ID
 GET http://localhost:9000/profiles/001
 Content-Type: application/json
 
-### Create new profile
+### Get profile by ID
+GET http://localhost:9000/auth/users/
+Content-Type: application/json
+
+### Create new User
 POST http://localhost:9000/auth/register
 Content-Type: application/json
 
 {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "senha1234"
+    "name": "Rick Martin",
+    "email": "rick_martin@example.com",
+    "password": "senha1234",
+    "phone": "1234567810"   
 }
 
+### Create profile
+POST http://localhost:9000/profiles/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc3OTM2NTksImV4cCI6MTc0Nzg4MDA1OX0.qmQyi0_bty9qvlkaRAaHJPqRa18JXJ7-PyV-TH4eoWE
+Content-Type: application/json
 
+{
+    "age": 27,
+    "gender": "male",
+    "location": {
+        "city": "São Paulo",
+        "state": "SP",
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    },
+    "interests": ["hiking", "reading", "coding"],
+    "bio": "An updated bio about me"
+}
 
 ### Login user
 POST http://localhost:9000/auth/login
 Content-Type: application/json
 
 {
-    "email": "john@example.com",
+    "email": "wesley_safs@example.com",
     "password": "senha1234"
 }
+
+
+### Get all profiles 
+GET http://localhost:9000/profiles/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc3OTM2NTksImV4cCI6MTc0Nzg4MDA1OX0.qmQyi0_bty9qvlkaRAaHJPqRa18JXJ7-PyV-TH4eoWE
+Content-Type: application/json
 
 ### Update profile
 PUT http://localhost:9000/profiles/1
