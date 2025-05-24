@@ -93,22 +93,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Get profile by ID
-router.get('/:id', (req, res) => {
-    try{
 
-        const id = req.params.id;
-        const profile = Profile.findOne({userId:id});
-        if (!profile) {
-            res.status(404).send('Profile not found');
-            return;
-        }
-        res.json(profile);
-    }catch(err){
-        // console.error('Error fetching profile:', err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 // Create new profile
 router.post('/', authenticateToken, async (req, res) => {
@@ -195,48 +180,7 @@ router.post('/like/:profileId', authenticateToken, async (req, res) => {
     }
 });
 
-// Get matches
-router.get('/:id/matches', (req, res) => {
-    const id = req.params.id;
-    const profile = Profile.find({id:profile.id});
-    if (!profile) {
-        res.status(404).send('Profile not found');
-        return;
-    }
-    const matches = profile.matches;
-    res.json(matches);
-});
 
-// Delete match
-router.delete('/:id/match/:userId', (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const profileId = req.params.id;
-        
-        const profile = profiles.find(profile => profile.id === profileId);
-        if (!profile) {
-            res.status(404).json({error:'Perfil não encontrado'});
-            return;
-        }
-        
-        if(profile.matches.includes(userId)){
-            profile.matches = profile.matches.filter(match => match !== userId);
-        }
-        const user = profiles.find(profile => profile.id === userId);
-        if(!user){
-            res.status(404).json({error:'Usuário não encontrado'});
-            return;
-        }
-        if(user.matches.includes(profileId)){
-            user.matches = user.matches.filter(match => match !== profileId);
-        }
-        
-        res.status(200).send("Match removido com sucesso");
-    } catch (error) {
-        console.error('Delete match error:', error);
-        res.status(500).json({error:error});
-    }
-});
 
 // Get swipes
 router.get('/swipes/:id', (req, res) => {
@@ -424,7 +368,7 @@ router.put('/preferences', authenticateToken, async (req, res) => {
 
 // Get user's own profile
 router.get('/me', authenticateToken, async (req, res) => {
-    console.log('Req User', req.user)
+    console.log('profiles/me')
     try {
         const profile = await Profile.findOne({ userId: req.user.id });
         if (!profile) {
@@ -501,10 +445,13 @@ router.post('/verify', authenticateToken, upload.single('verification'), async (
     }
 });
 
+
 // Update profile
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/', authenticateToken, async (req, res) => {
     try {
-        const profile = await Profile.findById(req.params.id);
+        console.log('Entrou');
+        console.log('Req no Update', req.body)
+        const profile = await Profile.findOne({userId:req.user.id});
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
@@ -521,6 +468,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         });
 
         await profile.save();
+        console.log('Profile updated', profile);
         res.json(profile);
     } catch (error) {
         console.error('Update profile error:', error);
@@ -528,4 +476,63 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Get matches
+router.get('/:id/matches', (req, res) => {
+    const id = req.params.id;
+    const profile = Profile.find({id:profile.id});
+    if (!profile) {
+        res.status(404).send('Profile not found');
+        return;
+    }
+    const matches = profile.matches;
+    res.json(matches);
+});
+
+// Delete match
+router.delete('/:id/match/:userId', (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const profileId = req.params.id;
+        
+        const profile = profiles.find(profile => profile.id === profileId);
+        if (!profile) {
+            res.status(404).json({error:'Perfil não encontrado'});
+            return;
+        }
+        
+        if(profile.matches.includes(userId)){
+            profile.matches = profile.matches.filter(match => match !== userId);
+        }
+        const user = profiles.find(profile => profile.id === userId);
+        if(!user){
+            res.status(404).json({error:'Usuário não encontrado'});
+            return;
+        }
+        if(user.matches.includes(profileId)){
+            user.matches = user.matches.filter(match => match !== profileId);
+        }
+        
+        res.status(200).send("Match removido com sucesso");
+    } catch (error) {
+        console.error('Delete match error:', error);
+        res.status(500).json({error:error});
+    }
+});
+
+// Get profile by ID
+router.get('/:id', (req, res) => {
+    try{
+
+        const id = req.params.id;
+        const profile = Profile.findOne({userId:id});
+        if (!profile) {
+            res.status(404).send('Profile not found');
+            return;
+        }
+        res.json(profile);
+    }catch(err){
+        // console.error('Error fetching profile:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 module.exports = router; 
