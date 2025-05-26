@@ -46,21 +46,16 @@ Content-Type: application/json
 
 
 ### Get all profiles 
-GET http://localhost:9000/profiles/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc3OTM2NTksImV4cCI6MTc0Nzg4MDA1OX0.qmQyi0_bty9qvlkaRAaHJPqRa18JXJ7-PyV-TH4eoWE
+GET http://localhost:9000/profiles/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc4MzQ0ODMsImV4cCI6MTc0NzkyMDg4M30._CWIjofZ2i8liXhUyyvK_mwRfKZKMgjfhBBmmod3gM8
 Content-Type: application/json
 
 ### Update profile
-PUT http://localhost:9000/profiles/1
+PUT http://localhost:9000/profiles/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc4MzQ0ODMsImV4cCI6MTc0NzkyMDg4M30._CWIjofZ2i8liXhUyyvK_mwRfKZKMgjfhBBmmod3gM8
 Content-Type: application/json
 
 {
-    "name": "John Doe Updated",
-    "email": "john.updated@example.com",
-    "location": {
-        "latitude": 40.7128,
-        "longitude": -74.0060
-    },
     "interests": ["hiking", "reading", "coding"],
     "bio": "An updated bio about me"
 }

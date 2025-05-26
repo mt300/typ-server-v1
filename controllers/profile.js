@@ -199,8 +199,24 @@ router.get('/swipes/:id', (req, res) => {
     res.json({swipes});
 });
 
+router.get('/photos/:filename', (req, res) => {
+  const filename = req.params.filename;
+
+  // Caminho absoluto do arquivo
+  const filePath = path.join(__dirname, '..', 'uploads', 'profiles', filename);
+
+  // Envia o arquivo
+  res.sendFile(filePath, err => {
+    if (err) {
+      console.error('Erro ao enviar o arquivo:', err);
+      res.status(404).json({ error: 'Foto não encontrada' });
+    }
+  });
+});
+
 // Upload profile photos
 router.post('/photos', authenticateToken, (req, res) => {
+    console.log('Entrou em PHOTOS')
     upload.array('photos', 6)(req, res, async (err) => {
         try {
             if (err) {
@@ -224,13 +240,14 @@ router.post('/photos', authenticateToken, (req, res) => {
 
             const newPhotos = req.files.map(file => ({
                 url: file.path,
+                name: file.filename,
                 isPrimary: profile.photos.length === 0 // First photo becomes primary
             }));
 
             profile.photos.push(...newPhotos);
             await profile.save();
-
-            res.status(201).json({ photos: profile.photos });
+            console.log('Phtos responsed', newPhotos)
+            res.status(201).json({ photos: newPhotos });
         } catch (error) {
             console.error('Photo upload error:', error);
             res.status(500).json({ error: error.message });
@@ -267,21 +284,24 @@ router.put('/photos/primary/:photoId', authenticateToken, async (req, res) => {
 // Delete photo
 router.delete('/photos/:photoId', authenticateToken, async (req, res) => {
     try {
+        console.log('Entrou em DELETE PHOTOS', req.params.photoId)
         const profile = await Profile.findOne({ userId: req.user.id });
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
         }
 
-        const photo = profile.photos.id(req.params.photoId);
+        const photo = profile.photos[req.params.photoId];
         if (!photo) {
             return res.status(404).json({ error: 'Photo not found' });
         }
 
-        // Delete file from storage
-        fs.unlinkSync(photo.url);
+        if(photo.url){
+            // Delete file from storage
+            fs.unlinkSync(photo.url);
+        }
 
         // Remove photo from profile
-        profile.photos.pull(req.params.photoId);
+        profile.photos.pull(photo._id);
         await profile.save();
 
         res.json({ photos: profile.photos });

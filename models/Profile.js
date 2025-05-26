@@ -47,6 +47,7 @@ const profileSchema = new mongoose.Schema({
     },
     photos: [{
         url: String,
+        name: String,
         isPrimary: Boolean,
         uploadedAt: {
             type: Date,
