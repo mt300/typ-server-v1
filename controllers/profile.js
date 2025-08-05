@@ -5,7 +5,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Profile = require('../models/Profile');
-const User = require('../models/User')
+const User = require('../models/User');
+const Match = require('../models/Match');
 const { authenticateToken } = require('../middleware/auth');
 // const profiles = require('../data/profiles');
 const { validateProfileData, validateLocation } = require('../utils/validation');
@@ -46,13 +47,15 @@ const upload = multer({
 // Get all profiles
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { maxDistance, ageRange, gender } = req.query;
         const userId = new mongoose.Types.ObjectId(req.user.id);
         console.log('Req User', req.user)
         console.log('UserId', userId)
         const user = await User.findOne({email:req.user.email})
         console.log('user', user)
         const userProfile = await Profile.findOne({ userId:user._id });
+
+        // console.log('Query',req.query)
+        
         // const userProfile = await Profile.findOne({ userId: req.user.id });
         // const all = await Profile.find()
 
@@ -61,34 +64,70 @@ router.get('/', authenticateToken, async (req, res) => {
         if (!userProfile) {
             return res.status(404).json({ error: 'User profile not found' });
         }
+        const { maxDistance, ageRange, preferredGenders:gender } = userProfile.preferences || {};
+        console.log('Preferences', { maxDistance, ageRange, gender:gender[0] })
 
-        const query = {};
-        if (gender) query.gender = gender;
-        if (ageRange) {
-            const [min, max] = ageRange.split('-');
-            query.age = { $gte: parseInt(min), $lte: parseInt(max) };
+        const { latitude, longitude } = userProfile.location;
+
+        const maxDistanceKm = parseFloat(maxDistance||'100'); // vindo da query
+
+        const latDelta = maxDistanceKm / 111; // 1 grau latitude ≈ 111 km
+        const lonDelta = maxDistanceKm / (111 * Math.cos(latitude * (Math.PI / 180))); // ajustado pela latitude
+
+        const minLat = latitude - Math.abs(latDelta);
+        const maxLat = latitude + Math.abs(latDelta);
+        const minLon = longitude - Math.abs(lonDelta);
+        const maxLon = longitude + Math.abs(lonDelta);
+        const {min:minAge, max:maxAge} = ageRange??{min:'18',max:'100'};
+        
+        let genderFilter = {};
+        if (gender[0] === 'both' || gender[0] === 'other' || !gender) {
+            genderFilter = { $in: ['male', 'female', 'other'] };
+        } else {
+            genderFilter = gender[0]; // 'male' ou 'female'
         }
-
-        if (maxDistance && userProfile.location) {
-            query.location = {
-                $near: {
-                    $geometry: {
-                        type: 'Point',
-                        coordinates: [userProfile.location.longitude, userProfile.location.latitude]
-                    },
-                    $maxDistance: parseInt(maxDistance) * 1000 // Convert km to meters
-                }
-            };
-        }
-
-        const profiles = await Profile.find({
-            ...query,
+        const parsedId = userProfile._id.toString();
+        const query = {
+            gender: genderFilter,
+            age: { $gte: parseInt(minAge||'18'), $lte: parseInt(maxAge||'100') },
+            'location.latitude': { $gte: minLat, $lte: maxLat },
+            'location.longitude': { $gte: minLon, $lte: maxLon },
             userId: { $ne: req.user.id },
-            _id: { $nin: userProfile.likes }
-        });
+            _id: { $nin: [...(userProfile.likes || []), ...(userProfile.matches || [])] },
+            likes: { $nin: [parsedId] }, // Exclude profiles already liked by the user,
+            dislikes: { $nin: [parsedId] } // Exclude profiles already disliked by the user
+        };
+        console.log('Query',query)
+        const profiles = await Profile.find(query)
+        // const query = {};
+        // if (gender) query.gender = gender;
+        // if (ageRange) {
+        //     const [min, max] = ageRange.split('-');
+        //     query.age = { $gte: parseInt(min), $lte: parseInt(max) };
+        // }
 
+        // if (maxDistance && userProfile.location) {
+        //     query.location = {
+        //         $near: {
+        //             $geometry: {
+        //                 type: 'Point',
+        //                 coordinates: [userProfile.location.longitude, userProfile.location.latitude]
+        //             },
+        //             $maxDistance: parseInt(maxDistance) * 1000 // Convert km to meters
+        //         }
+        //     };
+        // }
+
+        // const profiles = await Profile.find({
+        //     ...query,
+        //     userId: { $ne: req.user.id },
+        //     _id: { $nin: userProfile.likes }
+        // });
+        console.log('Profiles found', profiles.length)
+        console.log('Profile 0', profiles[0])
         res.json(profiles);
     } catch (error) {
+        console.error('Erro no GET Profiles', error)
         res.status(500).json({ error: error.message });
     }
 });
@@ -141,7 +180,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Like a profile
 router.post('/like/:profileId', authenticateToken, async (req, res) => {
     try {
-        // console.log('PARAMETORS', req.params.profileId)
+        console.log('PARAMETORS', req.params.profileId)
         const userProfile = await Profile.findOne({ userId: req.user.id });
         if (!userProfile) {
             return res.status(404).json({ error: 'Your profile not found' });
@@ -167,10 +206,13 @@ router.post('/like/:profileId', authenticateToken, async (req, res) => {
 
         // Check for mutual like (match)
         if (targetProfile.likes.includes(userProfile._id)) {
+            console.log('match')
             userProfile.matches.push(targetProfile._id);
             targetProfile.matches.push(userProfile._id);
+            await Match.create({user1: userProfile.userId, user2: targetProfile.userId});
             await Promise.all([userProfile.save(), targetProfile.save()]);
-            return res.json({ match: true, profile: targetProfile });
+            res.json({ match: true, profile: targetProfile });
+            return;
         }
 
         res.json({ match: false, profile: targetProfile });
@@ -239,7 +281,7 @@ router.post('/photos', authenticateToken, (req, res) => {
             }
 
             const newPhotos = req.files.map(file => ({
-                url: file.path,
+                url: `${process.env.BASE_API_URL}/profiles/photos/${file.filename}`,
                 name: file.filename,
                 isPrimary: profile.photos.length === 0 // First photo becomes primary
             }));
@@ -368,6 +410,7 @@ router.delete('/interests', authenticateToken, async (req, res) => {
 // Update preferences
 router.put('/preferences', authenticateToken, async (req, res) => {
     try {
+        console.log('Entrou em Preferences', req.body)
         const profile = await Profile.findOne({ userId: req.user.id });
         if (!profile) {
             return res.status(404).json({ error: 'Profile not found' });
@@ -375,9 +418,10 @@ router.put('/preferences', authenticateToken, async (req, res) => {
 
         profile.preferences = {
             ...profile.preferences,
-            ...req.body
+            ...req.body,
+            preferredGenders: (req.body.gender==='male' || req.body.gender==='female')? req.body.gender: 'other'
         };
-
+        console.log('Profle updated', profile)
         await profile.save();
         res.json(profile);
     } catch (error) {
@@ -497,14 +541,26 @@ router.put('/', authenticateToken, async (req, res) => {
 });
 
 // Get matches
-router.get('/:id/matches', (req, res) => {
-    const id = req.params.id;
-    const profile = Profile.find({id:profile.id});
+router.get('/matches', authenticateToken, async (req, res) => {
+    const id = req.user.id;
+    const profile = await Profile.find({id});
     if (!profile) {
         res.status(404).send('Profile not found');
         return;
     }
-    const matches = profile.matches;
+    const matches = profile.matches.slice(30);
+    if (matches.length === 0) {
+        return res.status(404).json({ error: 'No matches found' });
+    }
+    const parsedMatches = matches.map(async (profileId) => {
+        const matchProfile = await Profile.find(profile => profile.id === profileId);
+        return {
+            id: profileId,
+            name: matchProfile.name,
+            photo: matchProfile.photos[0],
+            lastMessage
+        }
+    });
     res.json(matches);
 });
 
@@ -540,15 +596,16 @@ router.delete('/:id/match/:userId', (req, res) => {
 });
 
 // Get profile by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     try{
-
-        const id = req.params.id;
-        const profile = Profile.findOne({userId:id});
+        console.log('Entrou em GET Profile by ID', req.params.id)
+        const id = req.params.id    ;
+        const profile = await Profile.findOne({$or:[{userId:id}, {_id:id}]});
         if (!profile) {
             res.status(404).send('Profile not found');
             return;
         }
+        console.log('Profile found', profile);
         res.json(profile);
     }catch(err){
         // console.error('Error fetching profile:', err);

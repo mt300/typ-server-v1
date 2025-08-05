@@ -7,7 +7,7 @@ const messageRoutes = require('./controllers/message');
 const matchRoutes = require('./controllers/match');
 const systemRoutes = require('./controllers/system');
 const { errorHandler } = require('./middleware/errorHandler');
-
+require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 9000;
 
@@ -42,7 +42,7 @@ app.use(errorHandler);
 
 const connectDB = async (customUri) => {
     try {
-        const mongoURI = customUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/typ';
+        const mongoURI = customUri || process.env.MONGODB_URI || 'mongodb://admin:admin123@localhost:27017/typ?authSource=admin';
         await mongoose.connect(mongoURI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,

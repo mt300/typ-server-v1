@@ -19,20 +19,20 @@ Content-Type: application/json
 
 ### Create profile
 POST http://localhost:9000/profiles/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc3OTM2NTksImV4cCI6MTc0Nzg4MDA1OX0.qmQyi0_bty9qvlkaRAaHJPqRa18JXJ7-PyV-TH4eoWE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmJiZjkxZDU3M2MwODA4MzQxMCIsImVtYWlsIjoidG9tX2pvYmltQGV4YW1wbGUuY29tIiwibmFtZSI6IlRvbSBKb2JpbSIsImlhdCI6MTc0ODI4ODAyMiwiZXhwIjoxNzQ4Mzc0NDIyfQ.ZQXl-tn7qir5eNPvESBkPuMyngCond1NpDu6y-gsoUM
 Content-Type: application/json
 
 {
-    "age": 27,
-    "gender": "male",
+    "age": 22,
+    "gender": "female",
     "location": {
         "city": "São Paulo",
         "state": "SP",
-        "latitude": 40.7128,
-        "longitude": -74.0060
+        "latitude": -23.587164,
+        "longitude": -46.641388
     },
-    "interests": ["hiking", "reading", "coding"],
-    "bio": "An updated bio about me"
+    "interests": ["cooking", "video games", "relaxing"],
+    "bio": "I'm a little introverted. So help me when I stuck on conversations lol"
 }
 
 ### Login user
@@ -40,7 +40,7 @@ POST http://localhost:9000/auth/login
 Content-Type: application/json
 
 {
-    "email": "wesley_safs@example.com",
+    "email": "rick_martin@example.com",
     "password": "senha1234"
 }
 
@@ -52,12 +52,18 @@ Content-Type: application/json
 
 ### Update profile
 PUT http://localhost:9000/profiles/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NDc4MzQ0ODMsImV4cCI6MTc0NzkyMDg4M30._CWIjofZ2i8liXhUyyvK_mwRfKZKMgjfhBBmmod3gM8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NTA0NTI4NDMsImV4cCI6MTc1MDUzOTI0M30.WmGVG7XuihPQt-ng8HLDrGFJM9juVrjwjE2zupbTFic
 Content-Type: application/json
 
 {
-    "interests": ["hiking", "reading", "coding"],
-    "bio": "An updated bio about me"
+    "interests": ["studiyng", "riding motocycles", "beaching"],
+    "location": {
+        "city": "Salvdor",
+        "state": "BA",
+        "latitude": -11.00000,
+        "longitude": -37.0060
+    },
+    "bio": "Rick martin na area"
 }
 
 
@@ -65,9 +71,11 @@ Content-Type: application/json
 DELETE http://localhost:9000/profiles/1
 Content-Type: application/json
 
+# ?maxDistance=6000&ageRange=18-30&gender=both
 ### Search profiles by location
-GET http://localhost:9000/profiles/search?lat=40.7128&lng=-74.0060&radius=10
+GET http://localhost:9000/profiles
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmQzNmZiMjkzOWZhZWI3MjMxY2Q5ZCIsImVtYWlsIjoicmlja19tYXJ0aW5AZXhhbXBsZS5jb20iLCJuYW1lIjoiUmljayBNYXJ0aW4iLCJpYXQiOjE3NTA0NTI4NDMsImV4cCI6MTc1MDUzOTI0M30.WmGVG7XuihPQt-ng8HLDrGFJM9juVrjwjE2zupbTFic
 
 ### Search profiles by interests
 GET http://localhost:9000/profiles/search?interests=hiking,reading

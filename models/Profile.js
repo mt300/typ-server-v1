@@ -93,6 +93,16 @@ const profileSchema = new mongoose.Schema({
         },
         verifiedAt: Date
     },
+    likes: [{
+        type: String, // User IDs of liked profiles   
+    }],
+    dislikes: [{
+        type: String // User IDs of disliked profiles
+    }],
+    matches: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Match'
+    }],
     createdAt: {
         type: Date,
         default: Date.now

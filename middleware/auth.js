@@ -8,19 +8,21 @@ const authenticateToken = (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
-
+        console.log('Token', token)
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });
         }
 
         jwt.verify(token, JWT_SECRET, (err, decoded) => {
             if (err) {
+                console.error('JWT verification error:', err);
                 if (err.name === 'TokenExpiredError') {
                     return res.status(401).json({ error: 'Token expired' });
                 }
                 return res.status(401).json({ error: 'Invalid token' });
             }
             req.user = decoded;
+            console.log('Decoded user', req.user);
             next();
         });
     } catch (error) {

@@ -2,33 +2,41 @@ const express = require('express')
 const router = express.Router()
 const Profile = require('../models/Profile')
 const Match = require('../models/Match')
-
+const { authenticateToken } = require('../middleware/auth')
 // Get all matches for current user
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
+
+        console.log('Fetching matches for user:', req?.user?.id);
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            res.status(401).json({ error: 'Unauthorized' });
         }
 
         const userId = req.user.id;
+        const profile = await Profile.findOne({ userId: userId });
+        if (!profile) {
+            res.status(404).json({ error: 'Profile not found' });
+        }
 
         // Encontre todos os matches do usuário autenticado
-        const matches = await Match.find({
-            $or: [{ user1: userId }, { user2: userId }],
-            status: 'matched'
-        });
+        const matches = profile.matches || [];
 
+        if (matches.length === 0) {
+            return res.status(200).json([]); // Retorna um array vazio se não houver matches
+        }
+        // Popule os detalhes dos usuários nos matches
+        
         // Pegue os IDs dos "outros usuários" nos matches
-        const matchedUserIds = matches.map(match => {
-            return match.user1.toString() === userId ? match.user2 : match.user1;
-        });
+        // const matchedUserIds = matches.map(match => {
+        //     return match.user1.toString() === userId ? match.user2 : match.user1;
+        // });
 
         // Busque os perfis dos usuários que deram match com o usuário autenticado
-        const matchedProfiles = await Profile.find({
-            userId: { $in: matchedUserIds }
-        });
+        // const matchedProfiles = await Profile.find({
+        //     userId: { $in: matchedUserIds }
+        // });
 
-        return res.status(200).json(matchedProfiles);
+        res.status(200).json(matches);
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: 'Server error' });
